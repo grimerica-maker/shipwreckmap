@@ -166,110 +166,65 @@ export default function MapPage() {
       map.current.addSource("wrecks", {
         type: "geojson",
         data,
-        cluster: true,
-        clusterMaxZoom: 10,
-        clusterRadius: 50,
       });
 
-      // Cluster circles
-      map.current.addLayer({
-        id: "wreck-clusters",
-        type: "circle",
-        source: "wrecks",
-        filter: ["has", "point_count"],
-        paint: {
-          "circle-color": [
-            "step", ["get", "point_count"],
-            "#51bbd6", 10,
-            "#f1f075", 50,
-            "#f28cb1", 200,
-            "#e74c3c",
-          ],
-          "circle-radius": [
-            "step", ["get", "point_count"],
-            15, 10, 20, 50, 25, 200, 35,
-          ],
-          "circle-opacity": 0.85,
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "rgba(255,255,255,0.3)",
-        },
-      });
-
-      // Cluster count label
-      map.current.addLayer({
-        id: "wreck-cluster-count",
-        type: "symbol",
-        source: "wrecks",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": "{point_count_abbreviated}",
-          "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
-          "text-size": 12,
-        },
-        paint: { "text-color": "#1a1a1a" },
-      });
-
-      // Individual ship wreck markers
+      // Ship wreck markers
       map.current.addLayer({
         id: "wreck-ship-points",
         type: "circle",
         source: "wrecks",
-        filter: ["all",
-          ["!", ["has", "point_count"]],
-          ["==", ["get", "type"], "ship"],
-        ],
+        filter: ["==", ["get", "type"], "ship"],
         paint: {
           "circle-radius": [
             "interpolate", ["linear"], ["zoom"],
-            2, 3, 8, 5, 12, 8,
+            1, 1.5, 4, 2.5, 8, 5, 12, 8,
           ],
           "circle-color": ["get", "_color"],
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "rgba(255,255,255,0.5)",
-          "circle-opacity": 0.9,
+          "circle-stroke-width": [
+            "interpolate", ["linear"], ["zoom"],
+            1, 0, 6, 0.5, 10, 1,
+          ],
+          "circle-stroke-color": "rgba(255,255,255,0.4)",
+          "circle-opacity": [
+            "interpolate", ["linear"], ["zoom"],
+            1, 0.4, 6, 0.7, 10, 0.9,
+          ],
         },
       });
 
-      // Individual aviation markers (triangle-ish via symbol)
+      // Aviation markers — slightly different style
       map.current.addLayer({
         id: "wreck-aviation-points",
         type: "circle",
         source: "wrecks",
-        filter: ["all",
-          ["!", ["has", "point_count"]],
-          ["==", ["get", "type"], "aviation"],
-        ],
+        filter: ["==", ["get", "type"], "aviation"],
         paint: {
           "circle-radius": [
             "interpolate", ["linear"], ["zoom"],
-            2, 3, 8, 5, 12, 8,
+            1, 1.5, 4, 2.5, 8, 5, 12, 8,
           ],
           "circle-color": "#ff6b35",
-          "circle-stroke-width": 2,
+          "circle-stroke-width": [
+            "interpolate", ["linear"], ["zoom"],
+            1, 0, 6, 1, 10, 2,
+          ],
           "circle-stroke-color": "#fff",
-          "circle-opacity": 0.9,
+          "circle-opacity": [
+            "interpolate", ["linear"], ["zoom"],
+            1, 0.4, 6, 0.7, 10, 0.9,
+          ],
         },
       });
 
       // Click handlers
       map.current.on("click", "wreck-ship-points", handleWreckClick);
       map.current.on("click", "wreck-aviation-points", handleWreckClick);
-      map.current.on("click", "wreck-clusters", (e) => {
-        const features = map.current.queryRenderedFeatures(e.point, { layers: ["wreck-clusters"] });
-        const clusterId = features[0].properties.cluster_id;
-        map.current.getSource("wrecks").getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-          map.current.easeTo({ center: features[0].geometry.coordinates, zoom: zoom });
-        });
-      });
 
       // Cursors
       map.current.on("mouseenter", "wreck-ship-points", () => { map.current.getCanvas().style.cursor = "pointer"; });
       map.current.on("mouseleave", "wreck-ship-points", () => { map.current.getCanvas().style.cursor = ""; });
       map.current.on("mouseenter", "wreck-aviation-points", () => { map.current.getCanvas().style.cursor = "pointer"; });
       map.current.on("mouseleave", "wreck-aviation-points", () => { map.current.getCanvas().style.cursor = ""; });
-      map.current.on("mouseenter", "wreck-clusters", () => { map.current.getCanvas().style.cursor = "pointer"; });
-      map.current.on("mouseleave", "wreck-clusters", () => { map.current.getCanvas().style.cursor = ""; });
 
     } catch (err) {
       console.error("Failed to load wrecks:", err);
@@ -547,7 +502,6 @@ export default function MapPage() {
 
     setVis(["wreck-ship-points"], showShipWrecks);
     setVis(["wreck-aviation-points"], showAviationWrecks);
-    setVis(["wreck-clusters", "wreck-cluster-count"], showShipWrecks || showAviationWrecks);
     setVis(["live-ships-layer"], showLiveShips);
     setVis(["trade-routes-line", "trade-routes-labels"], showTradeRoutes);
     setVis(["danger-polygon-fill", "danger-polygon-outline", "danger-points-circle", "danger-labels"], showDangerZones);
