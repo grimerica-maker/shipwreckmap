@@ -64,6 +64,7 @@ export default function MapPage() {
   const [showTradeRoutes, setShowTradeRoutes] = useState(false);
   const [showDangerZones, setShowDangerZones] = useState(false);
   const [showBathymetry, setShowBathymetry] = useState(false);
+  const [showWWII, setShowWWII] = useState(false);
 
   // Ship type filters
   const [shipTypeFilters, setShipTypeFilters] = useState({
@@ -614,6 +615,25 @@ export default function MapPage() {
     setVis(["trade-routes-line", "trade-routes-labels"], showTradeRoutes);
     setVis(["danger-polygon-fill", "danger-polygon-outline", "danger-points-circle", "danger-labels"], showDangerZones);
 
+    // WWII filter (1939-1945)
+    if (map.current.getLayer("wreck-ship-points")) {
+      if (showWWII) {
+        map.current.setFilter("wreck-ship-points", ["all",
+          ["==", ["get", "type"], "ship"],
+          [">=", ["slice", ["get", "date"], 0, 4], "1939"],
+          ["<=", ["slice", ["get", "date"], 0, 4], "1945"],
+        ]);
+        map.current.setFilter("wreck-aviation-points", ["all",
+          ["==", ["get", "type"], "aviation"],
+          [">=", ["slice", ["get", "date"], 0, 4], "1939"],
+          ["<=", ["slice", ["get", "date"], 0, 4], "1945"],
+        ]);
+      } else {
+        map.current.setFilter("wreck-ship-points", ["==", ["get", "type"], "ship"]);
+        map.current.setFilter("wreck-aviation-points", ["==", ["get", "type"], "aviation"]);
+      }
+    }
+
     // Bathymetry layer (GEBCO)
     if (showBathymetry && !map.current.getSource("bathymetry")) {
       map.current.addSource("bathymetry", {
@@ -634,7 +654,7 @@ export default function MapPage() {
     }
     setVis(["bathymetry-layer"], showBathymetry);
 
-  }, [mapLoaded, showShipWrecks, showAviationWrecks, showLiveShips, showTradeRoutes, showDangerZones, showBathymetry]);
+  }, [mapLoaded, showShipWrecks, showAviationWrecks, showLiveShips, showTradeRoutes, showDangerZones, showBathymetry, showWWII]);
 
   // ─── Search ───────────────────────────────────────────
   const handleSearch = async (q) => {
@@ -656,15 +676,26 @@ export default function MapPage() {
     setSearchQuery("");
     setSearchResults([]);
 
-    // Trigger popup
+    // Trigger popup (reuse handleWreckClick style)
     setTimeout(() => {
       const p = feature.properties;
-      const icon = p.type === "aviation" ? "✈️" : "⚓";
+      const isAviation = p.type === "aviation";
+      const icon = isAviation ? "✈️" : "⚓";
+      const typeLabel = isAviation ? "Aviation Disaster" : "Shipwreck";
       let html = `<div style="font-family:'Source Serif 4',Georgia,serif;max-width:280px;color:#e0e0e0;">
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">${icon} ${p.name}</div>`;
-      if (p.date) html += `<div><span style="color:#888;">Date:</span> ${p.date}</div>`;
-      if (p.casualties) html += `<div><span style="color:#888;">Lives lost:</span> <strong style="color:#e74c3c;">${Number(p.casualties).toLocaleString()}</strong></div>`;
-      if (p.wiki_url) html += `<div style="margin-top:8px;"><a href="${p.wiki_url}" target="_blank" style="color:#4a9eff;">Wikipedia →</a></div>`;
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">${icon} ${p.name}</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:8px;">${typeLabel}</div>`;
+      if (p.date) html += `<div style="margin:3px 0;"><span style="color:#888;">Date:</span> ${p.date}</div>`;
+      if (p.cause) html += `<div style="margin:3px 0;"><span style="color:#888;">Cause:</span> ${p.cause}</div>`;
+      if (p.casualties) html += `<div style="margin:3px 0;"><span style="color:#888;">Lives lost:</span> <strong style="color:#e74c3c;">${Number(p.casualties).toLocaleString()}</strong></div>`;
+      if (p.depth_m) html += `<div style="margin:3px 0;"><span style="color:#888;">Depth:</span> ${Number(p.depth_m).toLocaleString()}m</div>`;
+      if (p.flag) html += `<div style="margin:3px 0;"><span style="color:#888;">Flag:</span> ${p.flag}</div>`;
+      if (p.operator) html += `<div style="margin:3px 0;"><span style="color:#888;">Operator:</span> ${p.operator}</div>`;
+      if (p.wiki_url) {
+        const wikiTitle = p.wiki_url.split("/wiki/").pop();
+        html += `<div style="margin-top:8px;"><button onclick="window.__loadWiki('${wikiTitle}', this)" style="background:rgba(74,159,255,0.15);border:1px solid rgba(74,159,255,0.3);color:#4a9eff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Source Serif 4',Georgia,serif;width:100%;">📖 Wikipedia Summary</button></div>`;
+      }
+      html += `<div style="margin-top:6px;font-size:11px;color:#666;">${coords[1].toFixed(4)}°N, ${coords[0].toFixed(4)}°W</div>`;
       html += `</div>`;
       new mapboxgl.Popup({ maxWidth: "320px", className: "wreck-popup" })
         .setLngLat(coords).setHTML(html).addTo(map.current);
@@ -763,6 +794,11 @@ export default function MapPage() {
         <LayerToggle label="🚢 Live Ships" checked={showLiveShips} onChange={setShowLiveShips} />
         <LayerToggle label="🗺️ Trade Routes" checked={showTradeRoutes} onChange={setShowTradeRoutes} />
         <LayerToggle label="⚠️ Danger Zones" checked={showDangerZones} onChange={setShowDangerZones} />
+
+        <div style={{ marginTop: 8, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
+          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "1px", color: "#555", marginBottom: 6 }}>Filters</div>
+          <LayerToggle label="💣 WWII Only (1939-45)" checked={showWWII} onChange={setShowWWII} />
+        </div>
 
         {/* Cause legend */}
         <div style={{ marginTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 8 }}>
