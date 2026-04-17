@@ -599,13 +599,9 @@ export default function MapPage() {
         padding: "12px 16px 24px", pointerEvents: "none", zIndex: 10,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, pointerEvents: "auto" }}>
-          <h1 style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: 22, fontWeight: 700, color: "#e0e0e0", margin: 0,
-            letterSpacing: "0.5px",
-          }}>
-            ⚓ ShipwreckMap
-          </h1>
+          <a href="/">
+            <img src="/logo.png" alt="ShipwreckMap" style={{ height: 40, width: "auto", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }} />
+          </a>
           <span style={{ fontSize: 11, color: "#666", letterSpacing: "2px", textTransform: "uppercase" }}>
             {stats ? `${stats.total.toLocaleString()} wrecks` : "loading..."}
           </span>
