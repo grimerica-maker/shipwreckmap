@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -42,7 +43,15 @@ function getCauseColor(cause) {
   return CAUSE_COLORS.unknown;
 }
 
-export default function MapPage() {
+export default function MapPageWrapper() {
+  return (
+    <Suspense fallback={<div style={{ background: "#0a0e17", width: "100vw", height: "100vh" }} />}>
+      <MapPage />
+    </Suspense>
+  );
+}
+
+function MapPage() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -56,6 +65,10 @@ export default function MapPage() {
   const { user, isSignedIn } = useUser();
   const proTier = user?.publicMetadata?.shipmap_tier;
   const isPro = proTier === "pro" || proTier === "lifetime";
+
+  // URL params for fly-to from landing page
+  const searchParams = useSearchParams();
+  const flyToHandledRef = useRef(false);
 
   // Layer visibility
   const [showShipWrecks, setShowShipWrecks] = useState(true);
@@ -191,6 +204,57 @@ export default function MapPage() {
     // Poll live ships
     shipPollRef.current = setInterval(loadLiveShips, SHIP_POLL_INTERVAL);
   }, [mapLoaded]);
+
+  // ─── Fly to wreck from URL params ─────────────────────
+  useEffect(() => {
+    if (!mapLoaded || flyToHandledRef.current) return;
+    const lat = parseFloat(searchParams.get("lat"));
+    const lng = parseFloat(searchParams.get("lng"));
+    const wreckName = searchParams.get("wreck");
+    if (isNaN(lat) || isNaN(lng)) return;
+    flyToHandledRef.current = true;
+
+    // Wait for wrecks to load, then fly + open popup
+    const tryFly = () => {
+      map.current.flyTo({ center: [lng, lat], zoom: 10, duration: 2000 });
+
+      // If we have a wreck name, find it and open popup after fly completes
+      if (wreckName) {
+        setTimeout(() => {
+          const source = map.current.getSource("wrecks");
+          if (!source || !source._data) return;
+          const features = source._data.features || [];
+          const match = features.find(f => {
+            const p = f.properties;
+            if (!p.name) return false;
+            return p.name.toLowerCase() === decodeURIComponent(wreckName).toLowerCase();
+          });
+          if (match) {
+            const p = match.properties;
+            const coords = match.geometry.coordinates;
+            const depthLine = p.depth_m ? `<div><strong>Depth:</strong> ${Math.round(p.depth_m)}m</div>` : "";
+            const dateLine = p.date ? `<div><strong>Date:</strong> ${p.date}</div>` : "";
+            const causeLine = p.cause ? `<div><strong>Cause:</strong> ${p.cause}</div>` : "";
+            const flagLine = p.flag ? `<div><strong>Flag:</strong> ${p.flag}</div>` : "";
+            const typeLine = p.vessel_type ? `<div><strong>Type:</strong> ${p.vessel_type}</div>` : "";
+            const wikiBtn = p.wiki_url ? `<div style="margin-top:8px;"><button onclick="window.__loadWiki && window.__loadWiki('${(p.name || "").replace(/'/g, "")}', this)" style="background:rgba(74,144,217,0.15);border:1px solid rgba(74,144,217,0.3);color:#4a90d9;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;width:100%;">📖 Wikipedia</button></div>` : "";
+            const html = `<div style="font-family:'Source Serif 4',Georgia,serif;font-size:13px;color:#ccc;min-width:200px;">
+              <div style="font-size:16px;font-weight:700;color:#e0e0e0;margin-bottom:6px;">⚓ ${p.name || "Unknown"}</div>
+              <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">${p.type === "aviation" ? "Aviation crash" : "Shipwreck"}</div>
+              ${dateLine}${causeLine}${depthLine}${flagLine}${typeLine}
+              <div style="margin-top:6px;font-size:11px;color:#555;">${coords[1].toFixed(4)}°N, ${coords[0].toFixed(4)}°W</div>
+              ${wikiBtn}
+            </div>`;
+            new mapboxgl.Popup({ maxWidth: "320px", className: "wreck-popup" })
+              .setLngLat(coords).setHTML(html).addTo(map.current);
+          }
+        }, 2500);
+      }
+    };
+
+    // Delay slightly to let wreck source load
+    setTimeout(tryFly, 1500);
+  }, [mapLoaded, searchParams]);
 
   // ─── Wrecks Layer ─────────────────────────────────────
   const loadWrecks = async () => {
