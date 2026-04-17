@@ -66,6 +66,16 @@ export default function MapPage() {
   const [showBathymetry, setShowBathymetry] = useState(false);
   const [showWWII, setShowWWII] = useState(false);
 
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   // Ship type filters
   const [shipTypeFilters, setShipTypeFilters] = useState({
     cargo: true, tanker: true, passenger: true, fishing: true,
@@ -711,13 +721,13 @@ export default function MapPage() {
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0,
         background: "linear-gradient(180deg, rgba(10,14,23,0.95) 0%, rgba(10,14,23,0.7) 80%, transparent 100%)",
-        padding: "12px 16px 24px", pointerEvents: "none", zIndex: 10,
+        padding: isMobile ? "8px 12px 16px" : "12px 16px 24px", pointerEvents: "none", zIndex: 10,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, pointerEvents: "auto" }}>
           <a href="/">
-            <img src="/logo.png" alt="ShipwreckMap" style={{ height: 40, width: "auto", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }} />
+            <img src="/logo.png" alt="ShipwreckMap" style={{ height: isMobile ? 30 : 40, width: "auto", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" }} />
           </a>
-          <span style={{ fontSize: 11, color: "#666", letterSpacing: "2px", textTransform: "uppercase" }}>
+          <span style={{ fontSize: isMobile ? 10 : 11, color: "#666", letterSpacing: "2px", textTransform: "uppercase" }}>
             {stats ? `${stats.total.toLocaleString()} wrecks` : "loading..."}
           </span>
         </div>
@@ -726,7 +736,7 @@ export default function MapPage() {
       {/* Search */}
       <div style={{
         position: "absolute", top: 56, left: 16, zIndex: 20,
-        width: showSearch ? 300 : 40,
+        width: showSearch ? (isMobile ? "calc(100vw - 32px)" : 300) : 40,
         transition: "width 0.3s ease",
       }}>
         {!showSearch ? (
@@ -779,15 +789,34 @@ export default function MapPage() {
         )}
       </div>
 
-      {/* Layer Controls */}
+      {/* Layer Controls — collapsible on mobile */}
+      {isMobile && !panelOpen && (
+        <button onClick={() => setPanelOpen(true)} style={{
+          position: "absolute", bottom: 24, left: 16, zIndex: 20,
+          width: 44, height: 44, borderRadius: 10,
+          background: "rgba(10,14,23,0.92)", border: "1px solid rgba(255,255,255,0.15)",
+          color: "#ccc", fontSize: 18, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>☰</button>
+      )}
       <div style={{
         position: "absolute", bottom: 24, left: 16, zIndex: 20,
-        background: "rgba(10,14,23,0.92)", borderRadius: 10, padding: "12px 14px",
+        background: "rgba(10,14,23,0.95)", borderRadius: 10, padding: "12px 14px",
         border: "1px solid rgba(255,255,255,0.1)",
         fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 13, color: "#ccc",
         minWidth: 200,
+        display: (isMobile && !panelOpen) ? "none" : "block",
+        maxHeight: isMobile ? "70vh" : "auto",
+        overflowY: isMobile ? "auto" : "visible",
       }}>
-        <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "1.5px", color: "#666", marginBottom: 8 }}>Layers</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "1.5px", color: "#666" }}>Layers</div>
+          {isMobile && (
+            <button onClick={() => setPanelOpen(false)} style={{
+              background: "none", border: "none", color: "#888", fontSize: 18, cursor: "pointer", padding: "0 4px", lineHeight: 1,
+            }}>✕</button>
+          )}
+        </div>
 
         <LayerToggle label="⚓ Shipwrecks" checked={showShipWrecks} onChange={setShowShipWrecks} />
         <LayerToggle label="✈️ Aviation" checked={showAviationWrecks} onChange={setShowAviationWrecks} />
@@ -817,13 +846,13 @@ export default function MapPage() {
       {/* Stats badge */}
       {stats && (
         <div style={{
-          position: "absolute", bottom: 24, right: 16, zIndex: 20,
-          background: "rgba(10,14,23,0.92)", borderRadius: 10, padding: "10px 14px",
+          position: "absolute", bottom: isMobile ? 80 : 24, right: 16, zIndex: 20,
+          background: "rgba(10,14,23,0.92)", borderRadius: 10, padding: isMobile ? "6px 10px" : "10px 14px",
           border: "1px solid rgba(255,255,255,0.1)",
-          fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 12, color: "#888",
+          fontFamily: "'Source Serif 4', Georgia, serif", fontSize: isMobile ? 10 : 12, color: "#888",
           textAlign: "right",
         }}>
-          <div style={{ color: "#e0e0e0", fontSize: 18, fontWeight: 700 }}>
+          <div style={{ color: "#e0e0e0", fontSize: isMobile ? 14 : 18, fontWeight: 700 }}>
             {stats.total.toLocaleString()}
           </div>
           <div>wrecks mapped worldwide</div>
@@ -835,8 +864,8 @@ export default function MapPage() {
 
       {/* Pro Actions (top right) */}
       <div style={{
-        position: "absolute", top: 56, right: 16, zIndex: 20,
-        display: "flex", flexDirection: "column", gap: 6,
+        position: "absolute", top: isMobile ? 10 : 56, right: 16, zIndex: 20,
+        display: "flex", flexDirection: isMobile ? "row" : "column", gap: 6,
       }}>
         <ProButton label="📊 Export CSV" onClick={() => {
           if (isPro) {
@@ -874,6 +903,18 @@ export default function MapPage() {
           color: #666 !important;
           font-size: 18px !important;
           padding: 4px 8px !important;
+        }
+        @media (max-width: 640px) {
+          .mapboxgl-popup-content {
+            max-width: min(300px, 85vw) !important;
+            font-size: 12px !important;
+          }
+          .mapboxgl-ctrl-group {
+            display: none !important;
+          }
+          html, body {
+            overscroll-behavior: none !important;
+          }
         }
       `}</style>
     </div>
