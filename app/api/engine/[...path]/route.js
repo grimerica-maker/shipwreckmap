@@ -10,24 +10,25 @@ export async function GET(request, { params }) {
 
   try {
     const res = await fetch(backendUrl, {
-      headers: { "Content-Type": "application/json" },
       cache: "no-store",
     });
 
-    const contentType = res.headers.get("content-type") || "";
+    // Stream the response directly — don't parse and re-serialize
+    const contentType = res.headers.get("content-type") || "application/json";
+    const responseHeaders = {
+      "Content-Type": contentType,
+    };
+
+    // Pass through CSV disposition header
     if (contentType.includes("text/csv")) {
-      const text = await res.text();
-      return new NextResponse(text, {
-        status: res.status,
-        headers: {
-          "Content-Type": "text/csv",
-          "Content-Disposition": res.headers.get("content-disposition") || "attachment; filename=export.csv",
-        },
-      });
+      responseHeaders["Content-Disposition"] =
+        res.headers.get("content-disposition") || "attachment; filename=export.csv";
     }
 
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    return new NextResponse(res.body, {
+      status: res.status,
+      headers: responseHeaders,
+    });
   } catch (err) {
     console.error("Backend proxy error:", err);
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
@@ -45,8 +46,11 @@ export async function POST(request, { params }) {
       headers: { "Content-Type": "application/json" },
       body,
     });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+
+    return new NextResponse(res.body, {
+      status: res.status,
+      headers: { "Content-Type": res.headers.get("content-type") || "application/json" },
+    });
   } catch (err) {
     return NextResponse.json({ error: "Backend unavailable" }, { status: 502 });
   }
