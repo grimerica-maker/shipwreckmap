@@ -153,7 +153,7 @@ export default function MapPage() {
   // ─── Wrecks Layer ─────────────────────────────────────
   const loadWrecks = async () => {
     try {
-      const res = await fetch(`${DIRECT_API}/wrecks/all`);
+      const res = await fetch(`${API_BASE}/wrecks/all`);
       const data = await res.json();
 
       // Assign color to each feature
