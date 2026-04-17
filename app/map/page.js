@@ -714,23 +714,33 @@ function MapPage() {
       }
     }
 
-    // Bathymetry layer (GEBCO)
-    if (showBathymetry && !map.current.getSource("bathymetry")) {
-      map.current.addSource("bathymetry", {
-        type: "raster",
-        tiles: [
-          "https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_basemap_NCEI/MapServer/tile/{z}/{y}/{x}"
-        ],
-        tileSize: 256,
-        attribution: "GEBCO",
-      });
-      map.current.addLayer({
-        id: "bathymetry-layer",
-        type: "raster",
-        source: "bathymetry",
-        paint: { "raster-opacity": 0.6 },
-        layout: { visibility: "visible" },
-      }, "wreck-ship-points"); // Insert below wreck layers
+    // Bathymetry layer (GEBCO) — add source+layer on first activation
+    if (showBathymetry && !map.current.getLayer("bathymetry-layer")) {
+      try {
+        if (!map.current.getSource("bathymetry")) {
+          map.current.addSource("bathymetry", {
+            type: "raster",
+            tiles: [
+              "https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_basemap_NCEI/MapServer/tile/{z}/{y}/{x}"
+            ],
+            tileSize: 256,
+            attribution: "GEBCO",
+          });
+        }
+        // Only use beforeId if the wreck layer actually exists yet — otherwise
+        // addLayer throws and leaves source orphaned, which wedges future toggles.
+        const beforeId = map.current.getLayer("wreck-ship-points") ? "wreck-ship-points" : undefined;
+        map.current.addLayer({
+          id: "bathymetry-layer",
+          type: "raster",
+          source: "bathymetry",
+          paint: { "raster-opacity": 0.6 },
+          layout: { visibility: "visible" },
+        }, beforeId);
+      } catch (e) {
+        console.warn("bathymetry addLayer failed, cleaning up for retry:", e);
+        try { if (map.current.getSource("bathymetry")) map.current.removeSource("bathymetry"); } catch(_) {}
+      }
     }
     setVis(["bathymetry-layer"], showBathymetry);
 
@@ -946,13 +956,15 @@ function MapPage() {
             setPaywallFeature("export");
           }
         }} />
-        <ProButton label="🌊 Bathymetry" onClick={() => {
-          if (isPro) {
-            setShowBathymetry(!showBathymetry);
-          } else {
-            setPaywallFeature("depth");
-          }
-        }} locked={!isPro} />
+        <ProLayerToggle
+          label="🌊 Bathymetry"
+          checked={showBathymetry}
+          locked={!isPro}
+          onToggle={() => {
+            if (isPro) setShowBathymetry(!showBathymetry);
+            else setPaywallFeature("depth");
+          }}
+        />
       </div>
 
       {/* Paywall Modal */}
@@ -1030,6 +1042,47 @@ function ProButton({ label, onClick, locked = false }) {
     >
       {label}
       {locked && <span style={{ fontSize: 10, color: "#4a90d9" }}>PRO</span>}
+    </button>
+  );
+}
+
+// Pro-gated on/off toggle with explicit state pill — matches ProButton styling
+// but shows a clear ON/OFF indicator so users don't re-click during tile load.
+function ProLayerToggle({ label, checked, locked = false, onToggle }) {
+  return (
+    <button onClick={onToggle} style={{
+      padding: "8px 14px",
+      background: checked && !locked ? "rgba(74,158,255,0.15)" : "rgba(10,14,23,0.92)",
+      border: `1px solid ${checked && !locked ? "rgba(74,158,255,0.5)" : "rgba(255,255,255,0.1)"}`,
+      borderRadius: 8,
+      color: locked ? "#666" : (checked ? "#fff" : "#ccc"),
+      fontSize: 12,
+      cursor: "pointer",
+      fontFamily: "'Source Serif 4', Georgia, serif",
+      display: "flex", alignItems: "center", gap: 8,
+      transition: "all 0.15s",
+      whiteSpace: "nowrap",
+    }}
+      onMouseOver={(e) => { if (!checked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)"; }}
+      onMouseOut={(e) => { if (!checked) e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+    >
+      <span>{label}</span>
+      {locked ? (
+        <span style={{ fontSize: 10, color: "#4a90d9" }}>PRO</span>
+      ) : (
+        <span style={{
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          padding: "2px 6px",
+          borderRadius: 4,
+          background: checked ? "#4a9eff" : "rgba(255,255,255,0.08)",
+          color: checked ? "#0a0e17" : "#888",
+          transition: "all 0.15s",
+        }}>
+          {checked ? "ON" : "OFF"}
+        </span>
+      )}
     </button>
   );
 }
