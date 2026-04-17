@@ -419,18 +419,92 @@ export default function MapPage() {
         paint: { "text-color": "#ff6666", "text-halo-color": "#111", "text-halo-width": 1 },
       });
 
-      // Click popups
+      // Click popups with live stats
       const dangerClick = (e) => {
-        const p = e.features[0].properties;
+        const feat = e.features[0];
+        const p = feat.properties;
+        const geom = feat.geometry;
+        
+        // Count wrecks and ships inside this zone
+        let wreckCount = 0, shipCount = 0, aviationCount = 0, liveShipCount = 0;
+        
+        // Helper: point in polygon (simple ray casting)
+        const pointInPoly = (lng, lat, coords) => {
+          let inside = false;
+          const ring = coords[0]; // outer ring
+          for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            const xi = ring[i][0], yi = ring[i][1];
+            const xj = ring[j][0], yj = ring[j][1];
+            if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) {
+              inside = !inside;
+            }
+          }
+          return inside;
+        };
+        
+        // Helper: point near point (within ~200km radius for point-type danger zones)
+        const pointNear = (lng1, lat1, lng2, lat2, radiusDeg) => {
+          return Math.abs(lng1 - lng2) < radiusDeg && Math.abs(lat1 - lat2) < radiusDeg;
+        };
+        
+        // Get wreck data from source
+        const wreckSource = map.current.getSource("wrecks");
+        if (wreckSource && wreckSource._data) {
+          const features = wreckSource._data.features || [];
+          features.forEach(f => {
+            const [lng, lat] = f.geometry.coordinates;
+            let inside = false;
+            if (geom.type === "Polygon") {
+              inside = pointInPoly(lng, lat, geom.coordinates);
+            } else if (geom.type === "Point") {
+              inside = pointNear(lng, lat, geom.coordinates[0], geom.coordinates[1], 3);
+            }
+            if (inside) {
+              if (f.properties.type === "aviation") aviationCount++;
+              else wreckCount++;
+            }
+          });
+        }
+        
+        // Get live ship data from source
+        const shipSource = map.current.getSource("live-ships");
+        if (shipSource && shipSource._data) {
+          const features = shipSource._data.features || [];
+          features.forEach(f => {
+            const [lng, lat] = f.geometry.coordinates;
+            let inside = false;
+            if (geom.type === "Polygon") {
+              inside = pointInPoly(lng, lat, geom.coordinates);
+            } else if (geom.type === "Point") {
+              inside = pointNear(lng, lat, geom.coordinates[0], geom.coordinates[1], 3);
+            }
+            if (inside) liveShipCount++;
+          });
+        }
+        
         let html = `
-          <div style="font-family:'Source Serif 4',Georgia,serif;max-width:280px;color:#e0e0e0;">
+          <div style="font-family:'Source Serif 4',Georgia,serif;max-width:300px;color:#e0e0e0;">
             <div style="font-size:15px;font-weight:700;margin-bottom:4px;">⚠️ ${p.name}</div>
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#ff6666;margin-bottom:6px;">Danger: ${p.danger_level}</div>
-            <div style="font-size:13px;line-height:1.4;">${p.description}</div>
+            <div style="font-size:13px;line-height:1.4;margin-bottom:10px;">${p.description}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px;background:rgba(255,255,255,0.05);border-radius:6px;margin-bottom:8px;">
+              <div style="text-align:center;">
+                <div style="font-size:18px;font-weight:700;color:#4a90d9;">${wreckCount}</div>
+                <div style="font-size:10px;color:#888;">⚓ Shipwrecks</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:18px;font-weight:700;color:#ff6b35;">${aviationCount}</div>
+                <div style="font-size:10px;color:#888;">✈️ Aviation</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:18px;font-weight:700;color:#2ecc71;">${liveShipCount}</div>
+                <div style="font-size:10px;color:#888;">🚢 Live Ships</div>
+              </div>
+            </div>
         `;
-        if (p.notable_losses) html += `<div style="margin-top:6px;font-size:12px;color:#aaa;"><strong>Notable losses:</strong> ${p.notable_losses}</div>`;
+        if (p.notable_losses) html += `<div style="font-size:12px;color:#aaa;"><strong>Notable losses:</strong> ${p.notable_losses}</div>`;
         html += `</div>`;
-        new mapboxgl.Popup({ maxWidth: "320px", className: "wreck-popup" })
+        new mapboxgl.Popup({ maxWidth: "340px", className: "wreck-popup" })
           .setLngLat(e.lngLat)
           .setHTML(html)
           .addTo(map.current);
