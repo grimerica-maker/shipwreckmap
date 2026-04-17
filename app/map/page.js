@@ -63,6 +63,7 @@ export default function MapPage() {
   const [showLiveShips, setShowLiveShips] = useState(true);
   const [showTradeRoutes, setShowTradeRoutes] = useState(false);
   const [showDangerZones, setShowDangerZones] = useState(false);
+  const [showBathymetry, setShowBathymetry] = useState(false);
 
   // Ship type filters
   const [shipTypeFilters, setShipTypeFilters] = useState({
@@ -112,6 +113,36 @@ export default function MapPage() {
     return () => { delete window.__shipwreckTrail; };
   }, [isPro]);
 
+  // Wikipedia in-site loader
+  useEffect(() => {
+    window.__loadWiki = async (title, btn) => {
+      btn.textContent = "Loading...";
+      btn.disabled = true;
+      try {
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+        const data = await res.json();
+        const summary = data.extract || "No summary available.";
+        const thumb = data.thumbnail?.source;
+        const fullUrl = data.content_urls?.desktop?.page;
+
+        const container = btn.parentElement;
+        let html = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);">`;
+        if (thumb) {
+          html += `<img src="${thumb}" style="width:100%;border-radius:4px;margin-bottom:8px;opacity:0.9;" />`;
+        }
+        html += `<div style="font-size:12px;line-height:1.5;color:#bbb;max-height:150px;overflow-y:auto;">${summary}</div>`;
+        if (fullUrl) {
+          html += `<div style="margin-top:6px;"><a href="${fullUrl}" target="_blank" rel="noopener" style="color:#4a9eff;font-size:11px;text-decoration:none;">Full article →</a></div>`;
+        }
+        html += `</div>`;
+        container.innerHTML = html;
+      } catch (e) {
+        btn.textContent = "Failed to load";
+      }
+    };
+    return () => { delete window.__loadWiki; };
+  }, []);
+
   // ─── Initialize Map ───────────────────────────────────
   useEffect(() => {
     if (map.current) return;
@@ -119,7 +150,7 @@ export default function MapPage() {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
+      style: "mapbox://styles/mapbox/satellite-streets-v12",
       center: [-30, 30],
       zoom: 2.5,
       projection: "globe",
@@ -257,7 +288,10 @@ export default function MapPage() {
     if (p.aircraft_type) html += `<div style="margin:3px 0;"><span style="color:#888;">Aircraft:</span> ${p.aircraft_type}</div>`;
 
     if (p.wiki_url) {
-      html += `<div style="margin-top:8px;"><a href="${p.wiki_url}" target="_blank" rel="noopener" style="color:#4a9eff;text-decoration:none;font-size:13px;">Wikipedia →</a></div>`;
+      const wikiTitle = p.wiki_url.split("/wiki/").pop();
+      html += `<div style="margin-top:8px;">
+        <button onclick="window.__loadWiki('${wikiTitle}', this)" style="background:rgba(74,159,255,0.15);border:1px solid rgba(74,159,255,0.3);color:#4a9eff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Source Serif 4',Georgia,serif;width:100%;">📖 Wikipedia Summary</button>
+      </div>`;
     }
 
     html += `<div style="margin-top:6px;font-size:11px;color:#666;">${coords[1].toFixed(4)}°N, ${coords[0].toFixed(4)}°W</div>`;
@@ -505,7 +539,28 @@ export default function MapPage() {
     setVis(["live-ships-layer"], showLiveShips);
     setVis(["trade-routes-line", "trade-routes-labels"], showTradeRoutes);
     setVis(["danger-polygon-fill", "danger-polygon-outline", "danger-points-circle", "danger-labels"], showDangerZones);
-  }, [mapLoaded, showShipWrecks, showAviationWrecks, showLiveShips, showTradeRoutes, showDangerZones]);
+
+    // Bathymetry layer (GEBCO)
+    if (showBathymetry && !map.current.getSource("bathymetry")) {
+      map.current.addSource("bathymetry", {
+        type: "raster",
+        tiles: [
+          "https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_basemap_NCEI/MapServer/tile/{z}/{y}/{x}"
+        ],
+        tileSize: 256,
+        attribution: "GEBCO",
+      });
+      map.current.addLayer({
+        id: "bathymetry-layer",
+        type: "raster",
+        source: "bathymetry",
+        paint: { "raster-opacity": 0.6 },
+        layout: { visibility: "visible" },
+      }, "wreck-ship-points"); // Insert below wreck layers
+    }
+    setVis(["bathymetry-layer"], showBathymetry);
+
+  }, [mapLoaded, showShipWrecks, showAviationWrecks, showLiveShips, showTradeRoutes, showDangerZones, showBathymetry]);
 
   // ─── Search ───────────────────────────────────────────
   const handleSearch = async (q) => {
@@ -680,8 +735,12 @@ export default function MapPage() {
             setPaywallFeature("export");
           }
         }} />
-        <ProButton label="🌊 Depth Contours" onClick={() => {
-          if (!isPro) setPaywallFeature("depth");
+        <ProButton label="🌊 Bathymetry" onClick={() => {
+          if (isPro) {
+            setShowBathymetry(!showBathymetry);
+          } else {
+            setPaywallFeature("depth");
+          }
         }} locked={!isPro} />
       </div>
 
