@@ -39,25 +39,16 @@ export default function Home() {
         }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{
-            fontSize: 11, textTransform: "uppercase", letterSpacing: "4px",
-            color: "#4a6a8a", marginBottom: 16,
-          }}>
-            Every wreck on Earth — sea & air
-          </div>
-
-          <h1 style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: "clamp(36px, 7vw, 72px)",
-            fontWeight: 700,
-            lineHeight: 1.1,
-            margin: "0 0 16px",
-            background: "linear-gradient(135deg, #e0e0e0 0%, #8ab4d8 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}>
-            ShipwreckMap
-          </h1>
+          <img
+            src="/logo.png"
+            alt="ShipwreckMap.ca"
+            style={{
+              width: "clamp(200px, 35vw, 360px)",
+              height: "auto",
+              marginBottom: 20,
+              filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.5))",
+            }}
+          />
 
           <p style={{
             fontSize: "clamp(16px, 2.5vw, 22px)",
