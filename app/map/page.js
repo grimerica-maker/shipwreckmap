@@ -121,7 +121,7 @@ export default function MapPage() {
       style: "mapbox://styles/mapbox/dark-v11",
       center: [-30, 30],
       zoom: 2.5,
-      projection: "mercator",
+      projection: "globe",
       preserveDrawingBuffer: true,
     });
 
