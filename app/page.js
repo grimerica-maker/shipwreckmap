@@ -63,7 +63,7 @@ export default function Home() {
 
   const shareText = stats
     ? `${stats.total.toLocaleString()} shipwrecks mapped worldwide. Live vessel tracking. WWII wrecks. Danger zones.\n\nhttps://www.shipwreckmap.ca`
-    : "Explore 87,000+ shipwrecks mapped worldwide with live vessel tracking.\n\nhttps://www.shipwreckmap.ca";
+    : "87,000+ shipwrecks mapped worldwide with live vessel tracking, WWII filter, and danger zones.\n\nhttps://www.shipwreckmap.ca";
 
   return (
     <div style={{
@@ -277,7 +277,7 @@ export default function Home() {
                     <td style={{ padding: "8px 12px", color: "#5a7080" }}>{p.depth_m ? `${Math.round(p.depth_m)}m` : "—"}</td>
                     <td style={{ padding: "8px 12px", color: "#5a7080" }}>{p.flag || "—"}</td>
                     <td style={{ padding: "8px 12px" }}>
-                      <Link href={`/map?lat=${f.geometry.coordinates[1]}&lng=${f.geometry.coordinates[0]}&wreck=${encodeURIComponent(p.name || "")}`}
+                      <Link href="/pro"
                         style={{
                           color: "#1a6b9a", fontSize: 11, textDecoration: "none",
                           padding: "4px 10px", border: "1px solid rgba(26,107,154,0.3)",
@@ -285,7 +285,7 @@ export default function Home() {
                         }}
                         onMouseOver={(e) => e.currentTarget.style.background = "rgba(26,107,154,0.15)"}
                         onMouseOut={(e) => e.currentTarget.style.background = "transparent"}>
-                        Fly to →
+                        🔒 Fly to →
                       </Link>
                     </td>
                   </tr>
