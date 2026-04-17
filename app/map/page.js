@@ -824,9 +824,9 @@ export default function MapPage() {
           textAlign: "right",
         }}>
           <div style={{ color: "#e0e0e0", fontSize: 18, fontWeight: 700 }}>
-            {stats.total_casualties.toLocaleString()}
+            {stats.total.toLocaleString()}
           </div>
-          <div>lives lost at sea & air</div>
+          <div>wrecks mapped worldwide</div>
           <div style={{ marginTop: 4 }}>
             {stats.by_type.ship || 0} ships · {stats.by_type.aviation || 0} aircraft
           </div>
