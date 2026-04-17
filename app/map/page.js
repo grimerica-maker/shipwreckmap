@@ -214,6 +214,12 @@ function MapPage() {
     if (isNaN(lat) || isNaN(lng)) return;
     flyToHandledRef.current = true;
 
+    // Pro-gate: fly-to from URL costs a map load
+    if (!isPro) {
+      setPaywallFeature("flyto");
+      return;
+    }
+
     // Wait for wrecks to load, then fly + open popup
     const tryFly = () => {
       map.current.flyTo({ center: [lng, lat], zoom: 10, duration: 2000 });
@@ -734,6 +740,7 @@ function MapPage() {
   const handleSearch = async (q) => {
     setSearchQuery(q);
     if (q.length < 2) { setSearchResults([]); return; }
+    if (!isPro) { setPaywallFeature("search"); setSearchResults([]); return; }
     try {
       const res = await fetch(`${API_BASE}/wrecks/search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
@@ -744,6 +751,7 @@ function MapPage() {
   };
 
   const flyToWreck = (feature) => {
+    if (!isPro) { setPaywallFeature("search"); return; }
     const coords = feature.geometry.coordinates;
     map.current.flyTo({ center: coords, zoom: 10, duration: 2000 });
     setShowSearch(false);
