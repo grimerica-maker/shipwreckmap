@@ -341,6 +341,7 @@ export default function Home() {
       }}>
         <div style={{ marginBottom: 8 }}>© 2026 ShipwreckMap.ca · Data: UKHO/EMODnet · NOAA · Wikidata · OSM · AISStream</div>
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="https://x.com/grimerica" style={{ color: "#5a9abf", textDecoration: "none", fontWeight: 600 }}>𝕏 @grimerica</a>
           <a href="https://disastermap.ca" style={{ color: "#3a5a7a", textDecoration: "none" }}>DisasterMap</a>
           <a href="https://volcanosim.com" style={{ color: "#3a5a7a", textDecoration: "none" }}>VolcanoSim</a>
           <a href="https://ufomap.ca" style={{ color: "#3a5a7a", textDecoration: "none" }}>UFOMAP</a>
