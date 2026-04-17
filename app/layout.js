@@ -2,8 +2,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata = {
-  title: "ShipwreckMap — Every Wreck on Earth, Sea & Air",
-  description: "28,000+ shipwrecks and aviation disasters mapped. Live vessel tracking. Historical trade routes. The world's most dangerous waters.",
+  title: "ShipwreckMap — 87,000+ Wrecks Mapped Worldwide",
+  description: "87,000+ shipwrecks and aviation disasters on a satellite globe. Live vessel tracking. WWII submarine graveyards. 20 danger zones. Wikipedia summaries. The ocean floor's darkest history — mapped.",
   metadataBase: new URL("https://shipwreckmap.ca"),
   icons: {
     icon: [
@@ -17,8 +17,8 @@ export const metadata = {
   },
   manifest: "/manifest.json",
   openGraph: {
-    title: "ShipwreckMap — Every Wreck on Earth, Sea & Air",
-    description: "28,000+ shipwrecks and aviation disasters mapped with live vessel tracking. Historical trade routes. The world's most dangerous waters.",
+    title: "ShipwreckMap — 87,000+ Wrecks Mapped Worldwide",
+    description: "87,000+ shipwrecks and aviation disasters on a satellite globe. Live vessel tracking. WWII submarine graveyards. 20 danger zones. Wikipedia summaries.",
     url: "https://shipwreckmap.ca",
     siteName: "ShipwreckMap",
     type: "website",
@@ -27,14 +27,14 @@ export const metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "ShipwreckMap — Every Wreck on Earth",
+        alt: "ShipwreckMap — 87,000+ Wrecks Mapped Worldwide",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ShipwreckMap — Every Wreck on Earth, Sea & Air",
-    description: "28,000+ shipwrecks and aviation disasters mapped with live vessel tracking.",
+    title: "ShipwreckMap — 87,000+ Wrecks Mapped Worldwide",
+    description: "87,000+ shipwrecks and aviation disasters on a satellite globe. Live vessel tracking. WWII wrecks. Danger zones.",
     images: ["/og-image.jpg"],
   },
 };
