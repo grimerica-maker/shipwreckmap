@@ -7,6 +7,7 @@ import PaywallModal from "../components/PaywallModal";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 const API_BASE = "/api/engine";
+const DIRECT_API = process.env.NEXT_PUBLIC_DIRECT_API || "http://137.184.86.1:8004";
 const SHIP_POLL_INTERVAL = 60000; // 60s
 
 // Wreck cause → color
@@ -152,7 +153,7 @@ export default function MapPage() {
   // ─── Wrecks Layer ─────────────────────────────────────
   const loadWrecks = async () => {
     try {
-      const res = await fetch(`${API_BASE}/wrecks/all`);
+      const res = await fetch(`${DIRECT_API}/wrecks/all`);
       const data = await res.json();
 
       // Assign color to each feature
