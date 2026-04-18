@@ -1,6 +1,6 @@
 "use client";
 import { useUser, SignInButton } from "@clerk/nextjs";
-import { useBundleCheck } from "@/lib/useBundleCheck";
+import { useBundleCheck } from "../../lib/useBundleCheck";
 import { useEffect } from "react";
 
 const SIMMAPS_BUNDLE_URL = "https://www.simulationmaps.com/#bundle";
@@ -87,7 +87,6 @@ export default function PaywallModal({ feature, onClose }) {
           overflowY: "auto",
         }}
       >
-        {/* Close button */}
         <button
           onClick={onClose}
           style={{
@@ -98,7 +97,6 @@ export default function PaywallModal({ feature, onClose }) {
           }}
         >✕</button>
 
-        {/* Feature header */}
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>{config.icon}</div>
           <h2 style={{
@@ -112,7 +110,6 @@ export default function PaywallModal({ feature, onClose }) {
           </p>
         </div>
 
-        {/* Pro badge */}
         <div style={{
           textAlign: "center",
           fontSize: 11, textTransform: "uppercase", letterSpacing: "2px",
@@ -153,7 +150,6 @@ export default function PaywallModal({ feature, onClose }) {
           </div>
         </a>
 
-        {/* Pricing options */}
         <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
           <PriceOption
             label="Yearly"
@@ -188,7 +184,6 @@ export default function PaywallModal({ feature, onClose }) {
           </div>
         )}
 
-        {/* Other Pro features teaser */}
         <div style={{
           marginTop: 18, paddingTop: 14,
           borderTop: "1px solid rgba(255,255,255,0.08)",
