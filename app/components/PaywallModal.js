@@ -1,5 +1,9 @@
 "use client";
 import { useUser, SignInButton } from "@clerk/nextjs";
+import { useBundleCheck } from "@/lib/useBundleCheck";
+import { useEffect } from "react";
+
+const SIMMAPS_BUNDLE_URL = "https://www.simulationmaps.com/#bundle";
 
 const PRO_FEATURES = {
   trail: {
@@ -27,10 +31,25 @@ const PRO_FEATURES = {
     title: "Historical Weather",
     desc: "See what conditions were like when a wreck occurred — wind, waves, visibility.",
   },
+  search: {
+    icon: "🔍",
+    title: "Advanced Search",
+    desc: "Filter wrecks by name, vessel type, nationality, year, and more.",
+  },
 };
 
 export default function PaywallModal({ feature, onClose }) {
   const { isSignedIn, user } = useUser();
+  const { active: isBundle } = useBundleCheck(user?.primaryEmailAddress?.emailAddress);
+
+  // Auto-close if user has bundle — they shouldn't be paywalled
+  useEffect(() => {
+    if (feature && isBundle) onClose();
+  }, [feature, isBundle, onClose]);
+
+  if (!feature) return null;
+  if (isBundle) return null;
+
   const config = PRO_FEATURES[feature] || PRO_FEATURES.trail;
 
   const YEARLY_LINK = process.env.NEXT_PUBLIC_STRIPE_YEARLY_LINK || "#";
@@ -59,11 +78,13 @@ export default function PaywallModal({ feature, onClose }) {
           border: "1px solid rgba(255,255,255,0.12)",
           borderRadius: 14,
           padding: "36px 32px",
-          maxWidth: 420,
+          maxWidth: 440,
           width: "100%",
           position: "relative",
           fontFamily: "'Source Serif 4', Georgia, serif",
           color: "#e0e0e0",
+          maxHeight: "92vh",
+          overflowY: "auto",
         }}
       >
         {/* Close button */}
@@ -78,7 +99,7 @@ export default function PaywallModal({ feature, onClose }) {
         >✕</button>
 
         {/* Feature header */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>{config.icon}</div>
           <h2 style={{
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -95,13 +116,45 @@ export default function PaywallModal({ feature, onClose }) {
         <div style={{
           textAlign: "center",
           fontSize: 11, textTransform: "uppercase", letterSpacing: "2px",
-          color: "#4a90d9", marginBottom: 20,
+          color: "#4a90d9", marginBottom: 16,
         }}>
           Pro Feature
         </div>
 
+        {/* BUNDLE CTA */}
+        <a
+          href={SIMMAPS_BUNDLE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 10,
+            padding: "12px 14px",
+            background: "linear-gradient(135deg, rgba(251,146,60,0.14), rgba(251,146,60,0.04))",
+            border: "1.5px solid #fb923c",
+            borderRadius: 10,
+            marginBottom: 16,
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#fb923c", fontWeight: 700, marginBottom: 2 }}>
+              Or get all 6 maps
+            </div>
+            <div style={{ fontSize: 13, color: "#e0e0e0", fontWeight: 600, lineHeight: 1.3 }}>
+              <strong style={{ color: "#fb923c" }}>$79 lifetime</strong> · all SimulationMaps Pro
+            </div>
+          </div>
+          <div style={{ fontSize: 10, color: "#fb923c", fontWeight: 700, letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+            SEE BUNDLE →
+          </div>
+        </a>
+
         {/* Pricing options */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
           <PriceOption
             label="Yearly"
             price="$12.99"
@@ -137,7 +190,7 @@ export default function PaywallModal({ feature, onClose }) {
 
         {/* Other Pro features teaser */}
         <div style={{
-          marginTop: 20, paddingTop: 16,
+          marginTop: 18, paddingTop: 14,
           borderTop: "1px solid rgba(255,255,255,0.08)",
         }}>
           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "1.5px", color: "#555", marginBottom: 8 }}>
