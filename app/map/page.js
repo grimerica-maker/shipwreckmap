@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import PaywallModal from "../components/PaywallModal";
+import { useBundleCheck } from "../lib/useBundleCheck";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 const API_BASE = "/api/engine";
@@ -64,7 +65,11 @@ function MapPage() {
   // Auth
   const { user, isSignedIn } = useUser();
   const proTier = user?.publicMetadata?.shipmap_tier;
-  const isPro = proTier === "pro" || proTier === "lifetime";
+  const isIndividualPro = proTier === "pro" || proTier === "lifetime";
+
+  // SimulationMaps bundle check — grants Pro if user's email has an active bundle
+  const { active: isBundle } = useBundleCheck(user?.primaryEmailAddress?.emailAddress);
+  const isPro = isIndividualPro || isBundle;
 
   // URL params for fly-to from landing page
   const searchParams = useSearchParams();
