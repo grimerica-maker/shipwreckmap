@@ -322,7 +322,7 @@ export default function Home() {
 
       {/* ═══ PRICING ═══ */}
       <div style={{
-        textAlign: "center", padding: "64px 20px 80px",
+        textAlign: "center", padding: "64px 20px 40px",
         borderTop: "1px solid rgba(255,255,255,0.04)",
         background: "linear-gradient(180deg, transparent 0%, rgba(8,25,45,0.3) 100%)",
       }}>
@@ -342,6 +342,64 @@ export default function Home() {
           fontSize: 16, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
           boxShadow: "0 4px 20px rgba(26,107,154,0.3)",
         }}>Upgrade to Pro →</Link>
+      </div>
+
+      {/* ═══ BUNDLE CTA ═══ */}
+      <div style={{
+        padding: "8px 20px 80px",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "#4a6a80", marginBottom: 16, fontFamily: "'DM Sans', sans-serif" }}>— OR —</div>
+        <a
+          href="https://www.simulationmaps.com/#bundle"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-block",
+            textDecoration: "none",
+            maxWidth: 560,
+            width: "100%",
+            padding: "24px 28px",
+            background: "linear-gradient(135deg, rgba(251,146,60,0.10), rgba(251,146,60,0.02))",
+            border: "2px solid #fb923c",
+            borderRadius: 14,
+            textAlign: "left",
+            position: "relative",
+            transition: "transform 0.15s",
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+          onMouseOut={(e) => { e.currentTarget.style.transform = ""; }}
+        >
+          <div style={{
+            position: "absolute", top: -10, left: 20,
+            background: "#fb923c", color: "#0a0e17",
+            fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700,
+            padding: "4px 10px", borderRadius: 3,
+          }}>
+            Best value · All 6 Maps
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#fb923c", fontWeight: 700, marginBottom: 6 }}>
+                SimulationMaps All-Access Bundle
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 34, fontWeight: 700, color: "#fb923c" }}>$79</span>
+                <span style={{ fontSize: 13, color: "#6a8aa0" }}>lifetime · all 6 maps</span>
+              </div>
+              <div style={{ fontSize: 13, color: "#d0d8e0", lineHeight: 1.5, marginBottom: 4 }}>
+                ShipwreckMap Pro + DisasterMap + VolcanoSim + AsteroidSim + UfoMap + Climate Impact Map.
+              </div>
+              <div style={{ fontSize: 12, color: "#6a8aa0" }}>
+                Only <strong style={{ color: "#fb923c" }}>$49 more</strong> than ShipwreckMap Lifetime alone.
+              </div>
+            </div>
+            <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fb923c", fontWeight: 700, whiteSpace: "nowrap" }}>
+              See bundle →
+            </div>
+          </div>
+        </a>
       </div>
 
       {/* ═══ FOOTER ═══ */}
