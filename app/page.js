@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { useBundleCheck } from "../lib/useBundleCheck";
 
 const NOTABLE = [
   { name: "RMS Titanic", date: "1912-04-15", lat: 41.726, lng: -49.948, depth: 3784, cause: "Iceberg collision", dead: 1517 },
@@ -18,6 +20,12 @@ const NOTABLE = [
 ];
 
 export default function Home() {
+  const { user } = useUser();
+  const tier = user?.publicMetadata?.shipmap_tier;
+  const isIndividualPro = tier === "pro" || tier === "lifetime";
+  const { active: isBundle } = useBundleCheck(user?.primaryEmailAddress?.emailAddress);
+  const isPro = isIndividualPro || isBundle;
+
   const [stats, setStats] = useState(null);
   const [tickerIdx, setTickerIdx] = useState(0);
   const [wrecks, setWrecks] = useState([]);
@@ -277,15 +285,18 @@ export default function Home() {
                     <td style={{ padding: "8px 12px", color: "#5a7080" }}>{p.depth_m ? `${Math.round(p.depth_m)}m` : "—"}</td>
                     <td style={{ padding: "8px 12px", color: "#5a7080" }}>{p.flag || "—"}</td>
                     <td style={{ padding: "8px 12px" }}>
-                      <Link href="/pro"
+                      <Link href={isPro
+                        ? `/map?lat=${f.geometry?.coordinates?.[1]}&lng=${f.geometry?.coordinates?.[0]}&wreck=${encodeURIComponent(p.name || "Wreck")}`
+                        : "/pro"}
                         style={{
-                          color: "#1a6b9a", fontSize: 11, textDecoration: "none",
-                          padding: "4px 10px", border: "1px solid rgba(26,107,154,0.3)",
+                          color: isPro ? "#22c55e" : "#1a6b9a", fontSize: 11, textDecoration: "none",
+                          padding: "4px 10px",
+                          border: `1px solid ${isPro ? "rgba(34,197,94,0.3)" : "rgba(26,107,154,0.3)"}`,
                           borderRadius: 6, whiteSpace: "nowrap", transition: "background 0.15s",
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.background = "rgba(26,107,154,0.15)"}
+                        onMouseOver={(e) => e.currentTarget.style.background = isPro ? "rgba(34,197,94,0.15)" : "rgba(26,107,154,0.15)"}
                         onMouseOut={(e) => e.currentTarget.style.background = "transparent"}>
-                        🔒 Fly to →
+                        {isPro ? "✈️ Fly to →" : "🔒 Fly to →"}
                       </Link>
                     </td>
                   </tr>
