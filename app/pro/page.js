@@ -1,12 +1,17 @@
 "use client";
 import { useUser, SignInButton } from "@clerk/nextjs";
+import { useBundleCheck } from "@/lib/useBundleCheck";
+
+const SIMMAPS_BUNDLE_URL = "https://www.simulationmaps.com/#bundle";
 
 export default function ProPage() {
   const { isSignedIn, user } = useUser();
   const tier = user?.publicMetadata?.shipmap_tier;
-  const isPro = tier === "pro" || tier === "lifetime";
+  const isIndividualPro = tier === "pro" || tier === "lifetime";
 
-  // Replace with your actual Stripe Payment Link URLs
+  const { active: isBundle, plan: bundlePlan } = useBundleCheck(user?.primaryEmailAddress?.emailAddress);
+  const isPro = isIndividualPro || isBundle;
+
   const YEARLY_LINK = process.env.NEXT_PUBLIC_STRIPE_YEARLY_LINK || "#";
   const LIFETIME_LINK = process.env.NEXT_PUBLIC_STRIPE_LIFETIME_LINK || "#";
 
@@ -51,13 +56,17 @@ export default function ProPage() {
 
       {isPro ? (
         <div style={{
-          textAlign: "center", maxWidth: 400,
+          textAlign: "center", maxWidth: 480,
           background: "rgba(41,128,185,0.1)", border: "1px solid rgba(41,128,185,0.3)",
           borderRadius: 12, padding: 32,
         }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>✓</div>
-          <p style={{ color: "#8ab4d8", fontSize: 16 }}>
-            You have {tier} Pro access. All features are unlocked.
+          <p style={{ color: "#8ab4d8", fontSize: 16, marginBottom: 16 }}>
+            {isBundle ? (
+              <>Access granted via your SimulationMaps <strong>{bundlePlan}</strong> bundle. All features unlocked.</>
+            ) : (
+              <>You have {tier} Pro access. All features are unlocked.</>
+            )}
           </p>
           <a href="/map" style={{
             display: "inline-block", marginTop: 16,
@@ -68,9 +77,60 @@ export default function ProPage() {
         </div>
       ) : (
         <>
-          <p style={{ color: "#888", maxWidth: 500, textAlign: "center", lineHeight: 1.6, marginBottom: 40 }}>
+          <p style={{ color: "#888", maxWidth: 500, textAlign: "center", lineHeight: 1.6, marginBottom: 32 }}>
             Track live ship movements, export wreck data, bookmark locations, and explore depth contours. Support independent maritime research.
           </p>
+
+          {/* BUNDLE CTA — featured, above individual pricing */}
+          <a
+            href={SIMMAPS_BUNDLE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "block",
+              textDecoration: "none",
+              color: "inherit",
+              padding: "22px 24px",
+              background: "linear-gradient(135deg, rgba(251,146,60,0.14), rgba(251,146,60,0.03))",
+              border: "2px solid #fb923c",
+              borderRadius: 12,
+              marginBottom: 24,
+              maxWidth: 580,
+              width: "100%",
+              position: "relative",
+              transition: "transform 0.15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-2px)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+          >
+            <div style={{ position: "absolute", top: -10, left: 20, background: "#fb923c", color: "#0a0e17", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 700, padding: "4px 10px", borderRadius: 3 }}>
+              Best value · All 6 Maps
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+              <div style={{ flex: 1, minWidth: 240 }}>
+                <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "#fb923c", fontWeight: 700, marginBottom: 6 }}>
+                  SimulationMaps All-Access Bundle
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 32, fontWeight: 700, color: "#fb923c" }}>$79</span>
+                  <span style={{ fontSize: 13, color: "#888" }}>lifetime · all 6 maps</span>
+                </div>
+                <div style={{ fontSize: 13, color: "#e0e0e0", lineHeight: 1.5, marginBottom: 4 }}>
+                  ShipwreckMap Pro + DisasterMap + VolcanoSim + AsteroidSim + UfoMap + Climate Impact Map.
+                </div>
+                <div style={{ fontSize: 12, color: "#888" }}>
+                  Only <strong style={{ color: "#fb923c" }}>$49 more</strong> than ShipwreckMap Lifetime alone. Plus every future map, forever.
+                </div>
+              </div>
+              <div style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#fb923c", fontWeight: 700, whiteSpace: "nowrap", alignSelf: "center" }}>
+                See the bundle →
+              </div>
+            </div>
+          </a>
+
+          <div style={{ fontSize: 11, letterSpacing: "0.16em", color: "#4a6a8a", fontWeight: 600, marginBottom: 16, textAlign: "center", textTransform: "uppercase" }}>
+            ◈ Or just ShipwreckMap Pro
+          </div>
 
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
             {/* Yearly */}
