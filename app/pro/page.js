@@ -1,6 +1,6 @@
 "use client";
 import { useUser, SignInButton } from "@clerk/nextjs";
-import { useBundleCheck } from "@/lib/useBundleCheck";
+import { useBundleCheck } from "../../lib/useBundleCheck";
 
 const SIMMAPS_BUNDLE_URL = "https://www.simulationmaps.com/#bundle";
 
@@ -207,7 +207,6 @@ export default function ProPage() {
             </div>
           </div>
 
-          {/* Feature list */}
           <div style={{ marginTop: 48, maxWidth: 500 }}>
             {[
               "🚢 Live ship movement trails (30 min history)",
