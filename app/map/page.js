@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import PaywallModal from "../components/PaywallModal";
-import { useBundleCheck } from "../lib/useBundleCheck";
+import { useBundleCheck } from "../../lib/useBundleCheck";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 const API_BASE = "/api/engine";
